@@ -2,6 +2,11 @@ import streamlit as st
 import requests
 
 # ====================
+# 🧠 App Config (HARUS DI ATAS)
+# ====================
+st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
+
+# ====================
 # 🔧 Custom CSS & JS
 # ====================
 custom_css = """
@@ -10,13 +15,11 @@ custom_css = """
         font-family: 'Segoe UI', sans-serif;
         background-color: #f5f7fa;
     }
-
     h1 {
         color: #0d47a1;
         font-size: 2.3rem;
         margin-bottom: 0.5rem;
     }
-
     .stTextInput > div > div > input,
     .stTextArea > div > textarea {
         border: 2px solid #1e88e5;
@@ -24,7 +27,6 @@ custom_css = """
         padding: 0.5rem;
         font-size: 1rem;
     }
-
     button[kind="primary"] {
         background-color: #1976d2 !important;
         color: white !important;
@@ -33,11 +35,9 @@ custom_css = """
         font-size: 1rem;
         transition: all 0.2s ease;
     }
-
     button[kind="primary"]:hover {
         background-color: #0d47a1 !important;
     }
-
     .stDownloadButton {
         background-color: #43a047 !important;
         color: white !important;
@@ -45,26 +45,21 @@ custom_css = """
         font-weight: bold;
         transition: 0.2s;
     }
-
     .stDownloadButton:hover {
         background-color: #2e7d32 !important;
     }
-
     .stAlert {
         border-radius: 10px;
         padding: 1rem;
         font-size: 1rem;
     }
-
     @media (max-width: 768px) {
         h1 {
             font-size: 1.5rem;
         }
-
         .stTextArea > div > textarea {
             font-size: 0.9rem;
         }
-
         button[kind="primary"] {
             font-size: 0.9rem;
         }
@@ -97,20 +92,16 @@ function toggleDarkMode() {
     cursor: pointer;">🌓 Dark Mode</button>
 """
 
-# Inject CSS & JS
+# Inject CSS & JS (setelah set_page_config)
 st.markdown(custom_css, unsafe_allow_html=True)
 st.markdown(dark_mode_toggle, unsafe_allow_html=True)
 
 # ====================
-# 🧠 App Config
+# 📝 UI
 # ====================
-st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
 st.title("🗣 ElevenLabs Text to Speech (TTS)")
 st.markdown("Bikin suara dari teks pakai ElevenLabs. Masukin API key & info lainnya, terus download deh hasilnya!")
 
-# ====================
-# 📝 Input Fields
-# ====================
 api_key = st.text_input("🔑 API Key", type="password")
 voice_id = st.text_input("🎙 Voice ID", value="EXAVITQu4vr4xnSDxMaL")
 model_id = st.text_input("🧠 Model ID", value="eleven_multilingual_v2")
