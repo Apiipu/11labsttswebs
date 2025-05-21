@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
-import json
+
+# Harus jadi perintah Streamlit pertama
+st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
 
 # ====================
 # 🔧 Custom CSS & JS
@@ -77,17 +79,12 @@ dark_mode_toggle = """
 <script>
 function toggleDarkMode() {
   const root = document.documentElement;
-  const isDark = root.style.filter === 'invert(1) hue-rotate(180deg)';
-  root.style.filter = isDark ? 'invert(0)' : 'invert(1) hue-rotate(180deg)';
-  localStorage.setItem("darkMode", !isDark);
-}
-
-window.onload = () => {
-  const isDark = localStorage.getItem("darkMode") === "true";
-  if (isDark) {
-    document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';
+  if (root.style.filter === 'invert(1) hue-rotate(180deg)') {
+    root.style.filter = 'invert(0)';
+  } else {
+    root.style.filter = 'invert(1) hue-rotate(180deg)';
   }
-};
+}
 </script>
 <button onclick="toggleDarkMode()" style="
     position: fixed;
@@ -104,7 +101,6 @@ window.onload = () => {
 """
 
 # Inject CSS & JS
-st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
 st.markdown(custom_css, unsafe_allow_html=True)
 st.markdown(dark_mode_toggle, unsafe_allow_html=True)
 
@@ -123,19 +119,11 @@ model_id = st.text_input("🧠 Model ID", value="eleven_multilingual_v2")
 text = st.text_area("📄 Teks yang ingin diubah jadi suara", height=200)
 
 # ====================
-# ✅ Validasi
-# ====================
-if text and len(text) > 1000:
-    st.warning("⚠️ Teks terlalu panjang, potong jadi maksimal 1000 karakter ya!")
-
-# ====================
 # ▶️ Generate & Download
 # ====================
 if st.button("💾 Generate & Download MP3"):
     if not api_key or not voice_id or not model_id or not text:
-        st.error("❗ Semua field harus diisi dulu ya tod!")
-    elif len(text) > 1000:
-        st.error("❌ Teks terlalu panjang. Maksimal 1000 karakter!")
+        st.error("Semua field harus diisi dulu ya tod!")
     else:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
