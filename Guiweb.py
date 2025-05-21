@@ -1,10 +1,6 @@
 import streamlit as st
 import requests
-
-# ====================
-# 🧠 App Config (HARUS DI ATAS)
-# ====================
-st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
+import json
 
 # ====================
 # 🔧 Custom CSS & JS
@@ -15,11 +11,13 @@ custom_css = """
         font-family: 'Segoe UI', sans-serif;
         background-color: #f5f7fa;
     }
+
     h1 {
         color: #0d47a1;
         font-size: 2.3rem;
         margin-bottom: 0.5rem;
     }
+
     .stTextInput > div > div > input,
     .stTextArea > div > textarea {
         border: 2px solid #1e88e5;
@@ -27,6 +25,7 @@ custom_css = """
         padding: 0.5rem;
         font-size: 1rem;
     }
+
     button[kind="primary"] {
         background-color: #1976d2 !important;
         color: white !important;
@@ -35,9 +34,11 @@ custom_css = """
         font-size: 1rem;
         transition: all 0.2s ease;
     }
+
     button[kind="primary"]:hover {
         background-color: #0d47a1 !important;
     }
+
     .stDownloadButton {
         background-color: #43a047 !important;
         color: white !important;
@@ -45,21 +46,26 @@ custom_css = """
         font-weight: bold;
         transition: 0.2s;
     }
+
     .stDownloadButton:hover {
         background-color: #2e7d32 !important;
     }
+
     .stAlert {
         border-radius: 10px;
         padding: 1rem;
         font-size: 1rem;
     }
+
     @media (max-width: 768px) {
         h1 {
             font-size: 1.5rem;
         }
+
         .stTextArea > div > textarea {
             font-size: 0.9rem;
         }
+
         button[kind="primary"] {
             font-size: 0.9rem;
         }
@@ -71,12 +77,17 @@ dark_mode_toggle = """
 <script>
 function toggleDarkMode() {
   const root = document.documentElement;
-  if (root.style.filter === 'invert(1) hue-rotate(180deg)') {
-    root.style.filter = 'invert(0)';
-  } else {
-    root.style.filter = 'invert(1) hue-rotate(180deg)';
-  }
+  const isDark = root.style.filter === 'invert(1) hue-rotate(180deg)';
+  root.style.filter = isDark ? 'invert(0)' : 'invert(1) hue-rotate(180deg)';
+  localStorage.setItem("darkMode", !isDark);
 }
+
+window.onload = () => {
+  const isDark = localStorage.getItem("darkMode") === "true";
+  if (isDark) {
+    document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';
+  }
+};
 </script>
 <button onclick="toggleDarkMode()" style="
     position: fixed;
@@ -92,27 +103,39 @@ function toggleDarkMode() {
     cursor: pointer;">🌓 Dark Mode</button>
 """
 
-# Inject CSS & JS (setelah set_page_config)
+# Inject CSS & JS
+st.set_page_config(page_title="ElevenLabs TTS", page_icon="🗣")
 st.markdown(custom_css, unsafe_allow_html=True)
 st.markdown(dark_mode_toggle, unsafe_allow_html=True)
 
 # ====================
-# 📝 UI
+# 🧠 App Config
 # ====================
 st.title("🗣 ElevenLabs Text to Speech (TTS)")
 st.markdown("Bikin suara dari teks pakai ElevenLabs. Masukin API key & info lainnya, terus download deh hasilnya!")
 
+# ====================
+# 📝 Input Fields
+# ====================
 api_key = st.text_input("🔑 API Key", type="password")
 voice_id = st.text_input("🎙 Voice ID", value="EXAVITQu4vr4xnSDxMaL")
 model_id = st.text_input("🧠 Model ID", value="eleven_multilingual_v2")
 text = st.text_area("📄 Teks yang ingin diubah jadi suara", height=200)
 
 # ====================
+# ✅ Validasi
+# ====================
+if text and len(text) > 1000:
+    st.warning("⚠️ Teks terlalu panjang, potong jadi maksimal 1000 karakter ya!")
+
+# ====================
 # ▶️ Generate & Download
 # ====================
 if st.button("💾 Generate & Download MP3"):
     if not api_key or not voice_id or not model_id or not text:
-        st.error("Semua field harus diisi dulu ya tod!")
+        st.error("❗ Semua field harus diisi dulu ya tod!")
+    elif len(text) > 1000:
+        st.error("❌ Teks terlalu panjang. Maksimal 1000 karakter!")
     else:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
