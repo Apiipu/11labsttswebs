@@ -125,7 +125,7 @@ if st.button("💾 Generate & Download MP3"):
     if not api_key or not voice_id or not model_id or not text:
         st.error("Semua field harus diisi dulu ya tod!")
     else:
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        url = f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
             "xi-api-key": api_key,
             "Content-Type": "application/json",
