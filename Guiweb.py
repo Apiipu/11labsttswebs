@@ -1,9 +1,6 @@
 import streamlit as st
 import requests
-import tempfile
 import base64
-import os
-from pydub import AudioSegment
 from io import BytesIO
 
 st.set_page_config(page_title="ElevenLabs TTS", layout="centered")
@@ -42,6 +39,16 @@ def get_voices():
     )
     response.raise_for_status()
     return response.json()
+
+# Dark mode toggle
+st.sidebar.markdown("---")
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", value=False)
+if dark_mode:
+    st.markdown("""
+        <style>
+        body { background-color: #0e1117; color: white; }
+        </style>
+    """, unsafe_allow_html=True)
 
 # Ambil model dan voice
 try:
@@ -95,5 +102,5 @@ if st.button("🎙️ Generate Suara"):
 # Footer
 st.markdown("""
 ---
-🔧 Dibuat dengan Streamlit Oleh Santri Al-Cihideungiah • ElevenLabs API
+🔧 Dibuat dengan Streamlit • ElevenLabs API
 """)
