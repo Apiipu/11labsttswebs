@@ -1,67 +1,99 @@
 import streamlit as st
 import requests
 import tempfile
+import base64
+import os
+from pydub import AudioSegment
+from io import BytesIO
 
 st.set_page_config(page_title="ElevenLabs TTS", layout="centered")
-st.title("🗣️ ElevenLabs Text-to-Speech (TTS)")
+st.title("🗣️ ElevenLabs Text-to-Speech")
 
-# Input API Key
-api_key = st.text_input("Masukkan API Key ElevenLabs kamu:", type="password")
-
-if api_key:
-    headers = {
-        "Content-Type": "application/json",
-        "xi-api-key": api_key
-    }
-
-    # Ambil daftar model
-    try:
-        models_res = requests.get("https://api.elevenlabs.io/v1/models", headers=headers)
-        models_res.raise_for_status()
-        models = models_res.json().get("models", [])
-        model_ids = [model['model_id'] for model in models]
-    except Exception as e:
-        st.error(f"Gagal mengambil model: {e}")
+# Sidebar API Key Input
+with st.sidebar:
+    st.header("🔑 API Key")
+    api_key = st.text_input("Masukkan API Key Anda", type="password")
+    if not api_key:
+        st.warning("API Key diperlukan.")
         st.stop()
 
-    # Ambil daftar voice
-    try:
-        voices_res = requests.get("https://api.elevenlabs.io/v1/voices", headers=headers)
-        voices_res.raise_for_status()
-        voices = voices_res.json().get("voices", [])
-        voice_options = {f"{v['name']} ({v['voice_id'][:6]})": v['voice_id'] for v in voices}
-    except Exception as e:
-        st.error(f"Gagal mengambil voice: {e}")
-        st.stop()
-
-    # Form
-    with st.form("tts_form"):
-        text = st.text_area("Masukkan teks yang ingin dibacakan:", height=150)
-        selected_model = st.selectbox("Pilih Model:", model_ids)
-        selected_voice = st.selectbox("Pilih Voice:", list(voice_options.keys()))
-        submitted = st.form_submit_button("🔊 Generate")
-
-    if submitted and text:
-        voice_id = voice_options[selected_voice]
-        tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
-        payload = {
-            "text": text,
-            "model_id": selected_model
+# Fungsi: Ambil daftar model
+@st.cache_data(show_spinner=False)
+def get_models():
+    response = requests.get(
+        'https://api.elevenlabs.io/v1/models',
+        headers={
+            "Content-Type": "application/json",
+            "xi-api-key": api_key
         }
+    )
+    response.raise_for_status()
+    return response.json()
 
+# Fungsi: Ambil daftar voice
+@st.cache_data(show_spinner=False)
+def get_voices():
+    response = requests.get(
+        'https://api.elevenlabs.io/v1/voices',
+        headers={
+            "Content-Type": "application/json",
+            "xi-api-key": api_key
+        }
+    )
+    response.raise_for_status()
+    return response.json()
+
+# Ambil model dan voice
+try:
+    models = get_models()
+    voices = get_voices()
+except Exception as e:
+    st.error(f"Gagal mengambil data: {e}")
+    st.stop()
+
+model_options = [m['model_id'] for m in models]
+voice_options = {v['name']: v['voice_id'] for v in voices['voices']}
+
+# Form input teks
+st.subheader("🔊 Form TTS")
+text_input = st.text_area("Masukkan teks:", height=150)
+st.caption(f"Jumlah kata: {len(text_input.split())}")
+
+selected_model = st.selectbox("Pilih model:", model_options)
+selected_voice_name = st.selectbox("Pilih suara:", list(voice_options.keys()))
+selected_voice_id = voice_options[selected_voice_name]
+
+if st.button("🎙️ Generate Suara"):
+    if not text_input.strip():
+        st.warning("Teks tidak boleh kosong.")
+        st.stop()
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream"
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json",
+        "xi-model-id": selected_model
+    }
+    payload = {"text": text_input}
+
+    with st.spinner("Menghasilkan audio..."):
         try:
-            with st.spinner("Menghasilkan audio..."):
-                response = requests.post(tts_url, headers=headers, json=payload)
-                response.raise_for_status()
+            response = requests.post(url, headers=headers, json=payload)
+            response.raise_for_status()
 
-                # Simpan audio
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-                    tmp_file.write(response.content)
-                    tmp_path = tmp_file.name
+            audio_bytes = response.content
+            st.audio(audio_bytes, format="audio/mp3")
 
-                st.audio(tmp_path, format="audio/mp3")
-                with open(tmp_path, "rb") as f:
-                    st.download_button("💾 Download Audio", f, file_name="output.mp3")
+            # Download link
+            b64 = base64.b64encode(audio_bytes).decode()
+            href = f'<a href="data:audio/mp3;base64,{b64}" download="tts_output.mp3">📥 Download MP3</a>'
+            st.markdown(href, unsafe_allow_html=True)
 
         except requests.exceptions.RequestException as e:
-            st.error(f"Gagal generate audio: {e}")
+            st.error(f"Gagal menghasilkan audio: {e}")
+
+# Footer
+st.markdown("""
+---
+🔧 Dibuat dengan Streamlit Oleh Santri Al-Cihideungiah • ElevenLabs API
+""")
