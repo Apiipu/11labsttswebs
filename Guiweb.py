@@ -75,7 +75,7 @@ if st.button("🎙️ Generate Suara"):
         st.warning("Teks tidak boleh kosong.")
         st.stop()
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream"
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}"
     headers = {
         "xi-api-key": api_key,
         "Content-Type": "application/json",
